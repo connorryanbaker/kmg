@@ -2,10 +2,15 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 function _init()
-  gravity=1
+  spritesize=8
+  maxx=128
+  maxy=128
+  startx=3
+  starty=104
+  gravity=0.25
   player={
-    x=3,
-    y=104,
+    x=startx,
+    y=starty,
     s=19,
     ws={[0]=19,[1]=35,[2]=19,[3]=3},
     f=0,
@@ -37,7 +42,7 @@ function _update()
 
   if btnp(5) and player.ja and player.y>miny then
     player.ja=false
-    player.dy = -4
+    player.dy = -1
   elseif off_ground() and not player.dashing then
     player.dy += gravity
   else
@@ -63,15 +68,30 @@ function _update()
     dash_tick=nil
   end
 
-  player.x += player.dx
+  -- todo: should player coords be center of sprite?
+  if player.x + player.dx > 0 and player.x + player.dx + spritesize < maxx then
+    player.x += player.dx
+  end
+
   player.y += player.dy
   
+  -- todo: consolidate animation logic
   if player.dx != 0 and tick%5==0 then
     player.f = (player.f+1)%4
     player.s = player.ws[player.f]
   elseif tick%20==0 then
     player.f = (player.f+1)%2
     player.s = player.is[player.f]
+  end
+
+  -- todo: decide on order of operations for all player updates
+  if maxy < player.y then 
+    player.x=startx
+    player.y=starty
+    player.dx=0
+    player.dy=0
+    player.ja=true
+    player.da=true
   end
 end
 
@@ -82,6 +102,7 @@ function _draw()
 end
 
 function off_ground()
+  -- todo: needs work
   return not fget(mget(map_coord(player.x), map_coord(player.y+8)),0)
 end
 
