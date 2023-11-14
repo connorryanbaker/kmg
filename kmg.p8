@@ -8,14 +8,27 @@ function _init()
   startx=3
   starty=104
   gravity=0.25
+  friction=0.85
   player={
     x=startx,
     y=starty,
-    s=19,
+    sp=19,
+    w=8,
+    h=8,
     ws={[0]=19,[1]=35,[2]=19,[3]=3},
-    f=0,
+    flp=false,
     dx=0,
     dy=0,
+    max_dx=2,
+    max_dy=3,
+    acc=0.5,
+    boost=4,
+    anim=0,
+    running=false,
+    jumping=false,
+    falling=false,
+    landed=false,
+    dashing=false,
     ja=true,
     da=true,
     is={[0]=19,[1]=51},
@@ -27,72 +40,73 @@ function _init()
 end
 
 function _update()
-  tick=(tick+1)%60
-  if btn(⬅️) then
-    fs=true
-    player.dx=-1
-    player.direction=-1
-  elseif btn(➡️) then
-    fs=false
-    player.dx=1
-    player.direction=1
-  else
-    player.dx=0 
-  end
+  player_update()
+  -- tick=(tick+1)%60
+  -- if btn(⬅️) then
+  --   fs=true
+  --   player.dx=-1
+  --   player.direction=-1
+  -- elseif btn(➡️) then
+  --   fs=false
+  --   player.dx=1
+  --   player.direction=1
+  -- else
+  --   player.dx=0 
+  -- end
 
-  if btnp(5) and player.ja and player.y>miny then
-    player.ja=false
-    player.dy = -1
-  elseif not on_ground() and not player.dashing then
-    player.dy += gravity
-  else
-    player.ja=true
-    player.dy = 0
-  end
+  -- if btnp(5) and player.ja and player.y>miny then
+  --   player.ja=false
+  --   player.dy = -1
+  -- elseif not on_ground() and not player.dashing then
+  --   player.dy += gravity
+  -- else
+  --   player.ja=true
+  --   player.dy = 0
+  -- end
 
-  -- todo: horizontal collisions
-  if btnp(4) and player.da then
-    player.da = false
-    player.dashing=true
-    dash_tick=tick
-  end
+  -- -- todo: horizontal collisions
+  -- if btnp(4) and player.da then
+  --   player.da = false
+  --   player.dashing=true
+  --   dash_tick=tick
+  -- end
 
-  if player.dashing then 
-    if player.direction == 1 then player.dx += 2 else player.dx -= 2 end
-  end
+  -- if player.dashing then 
+  --   if player.direction == 1 then player.dx += 2 else player.dx -= 2 end
+  -- end
 
-  if dash_tick != nil and (dash_tick+5)%60==tick then
-    player.dx=0
-    player.da=true
-    player.dashing=false
-    dash_tick=nil
-  end
+  -- if dash_tick != nil and (dash_tick+5)%60==tick then
+  --   player.dx=0
+  --   player.da=true
+  --   player.dashing=false
+  --   dash_tick=nil
+  -- end
 
-  -- todo: should player coords be center of sprite?
-  if player.x + player.dx > 0 and player.x + player.dx + spritesize < maxx then
-    player.x += player.dx
-  end
+  -- -- todo: should player coords be center of sprite?
+  -- if player.x + player.dx > 0 and player.x + player.dx + spritesize < maxx then
+  --   player.x += player.dx
+  -- end
 
-  player.y += player.dy
-  
-  -- todo: consolidate animation logic
-  if player.dx != 0 and tick%5==0 then
-    player.f = (player.f+1)%4
-    player.s = player.ws[player.f]
-  elseif tick%20==0 then
-    player.f = (player.f+1)%2
-    player.s = player.is[player.f]
-  end
+  -- player.y += player.dy
+  -- 
+  -- -- todo: consolidate animation logic
+  -- if player.dx != 0 and tick%5==0 then
+  --   player.f = (player.f+1)%4
+  --   player.s = player.ws[player.f]
+  -- elseif tick%20==0 then
+  --   player.f = (player.f+1)%2
+  --   player.s = player.is[player.f]
+  -- end
 
-  -- todo: decide on order of operations for all player updates
-  if maxy < player.y then 
-    player.x=startx
-    player.y=starty
-    player.dx=0
-    player.dy=0
-    player.ja=true
-    player.da=true
-  end
+  -- -- todo: decide on order of operations for all player updates
+  -- if maxy < player.y then 
+  --   player.x=startx
+  --   player.y=starty
+  --   player.dx=0
+  --   player.dy=0
+  --   player.ja=true
+  --   player.da=true
+  -- end
 end
 
 function _draw()
@@ -110,6 +124,104 @@ end
 function map_coord(n)
   return flr(n / 8)
 end
+
+-- pulled from nerdy teachers tutorial - not used as of yet but just for example for future
+function player_update()
+  player.dy+=gravity
+  player.dx*=friction
+
+  if btn(0) then -- left
+    player.dx-=player.acc
+    player.running=true
+    player.flp=true
+  end
+  if btn(1) then -- right
+    player.dx+=player.acc
+    player.running=true
+    player.flp=false
+  end
+  
+  if btnp(5) and player.landed then
+    player.dy-=player.boost
+    player.landed=false
+  end
+
+  -- check collision up and down
+  if player.dy>0 then
+    player.falling=true
+    player.landed=false
+    player.jumping=false
+    
+    if collide_map(player,"down",0) then
+      player.landed=true
+      player.falling=false
+      player.dy=0
+      player.y-=(player.y+player.h)%8
+    end
+  elseif player.dy<0 then
+    player.jumping=true
+    if collide_map(player, "up", 1) then player.dy=0 end
+  end
+
+  -- check collision left and right
+
+  if player.dx<0 then
+    if collide_map(player, "left", 1) then player.dx=0 end
+  elseif player.dx>0 then
+    if collide_map(player, "right", 1) then player.dx=0 end
+  end
+
+  player.x+=player.dx
+  player.y+=player.dy
+end
+
+function collide_map(obj,dir,flag)
+  -- obj needs x y w h
+  local x=obj.x
+  local y=obj.y
+  local w=obj.w
+  local h=obj.h
+  
+  local x1=0
+  local y1=0
+  local x2=0
+  local y2=0
+
+  if dir=="left" then
+    x1=x-1
+    y1=y
+    x2=x
+    y2=y+h-1
+  elseif dir=="right" then
+    x1=x+1
+    y1=y
+    x2=x+w+1
+    y2=y+h-1
+  elseif dir=="up" then
+    x1=x+1
+    y1=y-1
+    x2=x+w-1
+    y2=y
+  elseif dir=="down" then
+    x1=x
+    y1=y+h
+    x2=x+w
+    y2=y+h
+  end
+  x1/=8
+  y1/=8
+  x2/=8
+  y2/=8
+  if fget(mget(x1,y1),flag)
+  or fget(mget(x1,y2),flag)
+  or fget(mget(x2,y1),flag)
+  or fget(mget(x2,y2),flag) then
+    return true
+  else
+    return false
+  end
+end
+
 __gfx__
 0000707000006060000050500444444055555555bbbbbbbb54444455effffff70000007704444440044444400000505000000000000000000000000000000000
 5000777750006565600064744ffffff49ffffff9b33bb3bb444444552effff7f033330004ffffff40ffffff0f4f0554000000000000000000000000000000000
