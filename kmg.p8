@@ -43,7 +43,7 @@ function _update()
   if btnp(5) and player.ja and player.y>miny then
     player.ja=false
     player.dy = -1
-  elseif off_ground() and not player.dashing then
+  elseif not on_ground() and not player.dashing then
     player.dy += gravity
   else
     player.ja=true
@@ -61,7 +61,7 @@ function _update()
     if player.direction == 1 then player.dx += 2 else player.dx -= 2 end
   end
 
-  if dash_tick != nil and tick-5==dash_tick then
+  if dash_tick != nil and (dash_tick+5)%60==tick then
     player.dx=0
     player.da=true
     player.dashing=false
@@ -101,9 +101,10 @@ function _draw()
   spr(player.s,player.x,player.y,1,1,fs)
 end
 
-function off_ground()
+function on_ground()
   -- todo: needs work
-  return not fget(mget(map_coord(player.x), map_coord(player.y+8)),0)
+  return fget(mget(map_coord(player.x), map_coord(player.y+8)),0) and
+player.y%8 == 0
 end
 
 function map_coord(n)
