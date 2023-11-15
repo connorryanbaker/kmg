@@ -171,8 +171,18 @@ function player_update()
     if collide_map(player, "right", 1) then player.dx=0 end
   end
 
-  player.x+=player.dx
+  local nx = player.x+player.dx
+  if nx >=0 and player.w+nx<maxx then player.x=nx end
   player.y+=player.dy
+
+  if player.y>maxy then reset_player_location() end
+end
+
+function reset_player_location()
+  player.x=startx
+  player.y=starty
+  player.dx=0
+  player.dy=0
 end
 
 function collide_map(obj,dir,flag)
