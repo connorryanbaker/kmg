@@ -7,12 +7,12 @@ function _init()
   maxy=128
   startx=3
   starty=104
-  gravity=0.25
-  friction=0.85
-  player={
+  gravity=0.3
+  friction=0.65
+  player={ 
     x=startx,
     y=starty,
-    sp=19,
+    s=19,
     w=8,
     h=8,
     ws={[0]=19,[1]=35,[2]=19,[3]=3},
@@ -21,7 +21,7 @@ function _init()
     dy=0,
     max_dx=2,
     max_dy=3,
-    acc=0.5,
+    acc=0.25,
     boost=4,
     anim=0,
     running=false,
@@ -32,6 +32,8 @@ function _init()
     ja=true,
     da=true,
     is={[0]=19,[1]=51},
+    runf=0,
+    idlef=0,
     direction=1
   }
   miny=player.y-5 -- todo: needs thought
@@ -41,91 +43,34 @@ end
 
 function _update()
   player_update()
-  -- tick=(tick+1)%60
-  -- if btn(⬅️) then
-  --   fs=true
-  --   player.dx=-1
-  --   player.direction=-1
-  -- elseif btn(➡️) then
-  --   fs=false
-  --   player.dx=1
-  --   player.direction=1
-  -- else
-  --   player.dx=0 
-  -- end
-
-  -- if btnp(5) and player.ja and player.y>miny then
-  --   player.ja=false
-  --   player.dy = -1
-  -- elseif not on_ground() and not player.dashing then
-  --   player.dy += gravity
-  -- else
-  --   player.ja=true
-  --   player.dy = 0
-  -- end
-
-  -- -- todo: horizontal collisions
-  -- if btnp(4) and player.da then
-  --   player.da = false
-  --   player.dashing=true
-  --   dash_tick=tick
-  -- end
-
-  -- if player.dashing then 
-  --   if player.direction == 1 then player.dx += 2 else player.dx -= 2 end
-  -- end
-
-  -- if dash_tick != nil and (dash_tick+5)%60==tick then
-  --   player.dx=0
-  --   player.da=true
-  --   player.dashing=false
-  --   dash_tick=nil
-  -- end
-
-  -- -- todo: should player coords be center of sprite?
-  -- if player.x + player.dx > 0 and player.x + player.dx + spritesize < maxx then
-  --   player.x += player.dx
-  -- end
-
-  -- player.y += player.dy
-  -- 
-  -- -- todo: consolidate animation logic
-  -- if player.dx != 0 and tick%5==0 then
-  --   player.f = (player.f+1)%4
-  --   player.s = player.ws[player.f]
-  -- elseif tick%20==0 then
-  --   player.f = (player.f+1)%2
-  --   player.s = player.is[player.f]
-  -- end
-
-  -- -- todo: decide on order of operations for all player updates
-  -- if maxy < player.y then 
-  --   player.x=startx
-  --   player.y=starty
-  --   player.dx=0
-  --   player.dy=0
-  --   player.ja=true
-  --   player.da=true
-  -- end
+  player_animate()
 end
 
 function _draw()
   cls()
   map(0,0)
-  spr(player.s,player.x,player.y,1,1,fs)
+  spr(player.s,player.x,player.y,1,1,player.flp)
 end
 
-function on_ground()
-  -- todo: needs work
-  return fget(mget(map_coord(player.x), map_coord(player.y+8)),0) and
-player.y%8 == 0
+function player_animate()
+  if player.jumping then
+    player.s=12
+  elseif player.running then
+    if time()-player.anim>.1 then
+      player.anim=time()
+      player.s=player.ws[player.runf]
+      player.runf=(player.runf+1)%4
+    end
+  else
+    if time()-player.anim>.4 then
+      player.anim=time()
+      player.s=player.is[player.idlef]
+      player.idlef=(player.idlef+1)%2
+    end
+  end
 end
 
-function map_coord(n)
-  return flr(n / 8)
-end
-
--- pulled from nerdy teachers tutorial - not used as of yet but just for example for future
+-- thanks nerdy teachers :D
 function player_update()
   player.dy+=gravity
   player.dx*=friction
@@ -169,6 +114,14 @@ function player_update()
     if collide_map(player, "left", 1) then player.dx=0 end
   elseif player.dx>0 then
     if collide_map(player, "right", 1) then player.dx=0 end
+  end
+
+  -- check idle
+  if abs(player.dx)<0.005 and player.dy==0 then
+    player.dx=0
+    player.running=false
+    player.jumping=false
+    player.falling=false
   end
 
   local nx = player.x+player.dx
@@ -233,14 +186,14 @@ function collide_map(obj,dir,flag)
 end
 
 __gfx__
-0000707000006060000050500444444055555555bbbbbbbb54444455effffff70000007704444440044444400000505000000000000000000000000000000000
-5000777750006565600064744ffffff49ffffff9b33bb3bb444444552effff7f033330004ffffff40ffffff0f4f0554000000000000000000000000000000000
-050057b705005797060047b74f3fff349f3fff39353333b34444454422eeeeff333367074f0fff040f0fff004040546400000000000000000000000000000000
-5000777760007777700065744effffe4099fff90355553334444444422eeeeff363666004ffffff40ffffff0f00044f700000000000000000000000000000000
-5777777055657770674545404f2222440fdddd00445334554445444422eeeeff33333a3a0499994000788700f5544ff000000000000000000000000000000000
-07777770075777700457546004422f40000ddf00454454454455444422eeeeff3333333340f99f0400f77f004554ff7000000000000000000000000000000000
-077777700777777044764670044cc440000440004445445444444444221111ef55355333040cc040000880004745557000000000000000000000000000000000
-707070077070700760606006004c4c00000f0f0055544444444444452111111e55055055000cc000000550007070707000000000000000000000000000000000
+0000707000006060000050500444444055555555bbbbbbbb54444455effffff70000007704444440044444400000505004444440000000000000000000000000
+5000777750006565600064744ffffff49ffffff9b33bb3bb444444552effff7f033330004ffffff40ffffff0f4f055404ffffff4000000000000000000000000
+050057b705005797060047b74f3fff349f3fff39353333b34444454422eeeeff333367074f0fff040f0fff00404054644f3fff34000000000000000000000000
+5000777760007777700065744effffe4099fff90355553334444444422eeeeff363666004ffffff40ffffff0f00044f74effffe4000000000000000000000000
+5777777055657770674545404f2222440fdddd00445334554445444422eeeeff33333a3a0499994000788700f5544ff04f2222f4000000000000000000000000
+07777770075777700457546004422f40000ddf00454454454455444422eeeeff3333333340f99f0400f77f004554ff7004422440000000000000000000000000
+077777700777777044764670044cc440000440004445445444444444221111ef55355333040cc0400008800047455570044cc440000000000000000000000000
+707070077070700760606006004c4c00000f0f0055544444444444452111111e55055055000cc000000550007070707000144100000000000000000000000000
 00007070000060600000505004444440555555554444444400000000d66666670000000000000000000000000000000000000000000000000000000000000000
 5000777750006565600064744ffffff49ffffff945544544000000005d6666760000000000000000000000000000000000000000000000000000000000000000
 050057b705005797060047b74f3fff349f3fff39455555440000000055dddd660000000000000000000000000000000000000000000000000000000000000000
