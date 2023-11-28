@@ -3,8 +3,13 @@ version 41
 __lua__
 function _init()
   spritesize=8
-  maxx=128
-  maxy=600 -- todo: grab from individual maps
+  level=0
+  minx=0+(level*256)
+  miny=0
+  maxx=256+(level*256)
+  maxy=512 -- todo: grab from individual maps
+  max_cam_y=388 -- todo: configure
+  max_cam_x=maxx/2
   startx=3
   starty=433
   gravity=0.25
@@ -63,13 +68,17 @@ function _draw()
   cls()
   map(0,0)
   spr(player.s,player.x,player.y,1,1,player.flp)
-  spr(16, 3, 48, 1, 1)
+  -- spr(16, 3, 48, 1, 1)
   -- test
   -- rect(x1r,y1r,x2r,y2r,7)
   -- print("L="..tostring(collide_l), x2r+5, y2r)
   -- print("R="..tostring(collide_r), x2r+5, y2r-10)
   -- print("U="..tostring(collide_u), x2r+5, y2r-20)
   -- print("D="..tostring(collide_d), x2r+5, y2r-30)
+  -- print("player_x: "..tostring(player.x), player.x, player.y-10)
+  -- print("player_y: "..tostring(player.y), player.x, player.y-20)
+  -- print("cam_x: "..tostring(cam_x), player.x, player.y-30)
+  -- print("cam_y: "..tostring(cam_y), player.x, player.y-40)
   -- test
   if player.dashing and player.dashframe<8 then
     draw_dash_trail(player.x,player.y,player.dashframe,player.flp)
@@ -85,9 +94,12 @@ function _draw()
 end
 
 function camera_update()
-  cam_x=player.x-64+player.w/2
+  cam_x=mid(minx, player.x-64+player.w/2, maxx)
   if cam_x < 0 then cam_x=0 end 
-  cam_y=player.y-64+player.w/2
+  if cam_x > max_cam_x then cam_x=max_cam_x end
+  cam_y=player.y-104+player.w/2
+  -- cam_y=mid(miny, player.y-64+player.w/2, maxy)
+  if cam_y > maxy then cam_y=max_y end
   camera(cam_x,cam_y)
 end
 
@@ -199,7 +211,7 @@ function player_update()
   -- check collision left and right
 
   if player.dx<0 then
-    if collide_map(player, "left", 1) then 
+    if collide_map(player, "left", 1) or player.x <= minx then 
       player.dx=0
     -- test
     collide_l=true
@@ -210,7 +222,7 @@ function player_update()
     end
     collide_r=false
   elseif player.dx>0 then
-    if collide_map(player, "right", 1) then 
+    if collide_map(player, "right", 1) or player.x >= maxx then 
       player.dx=0
       -- test
       collide_r=true
