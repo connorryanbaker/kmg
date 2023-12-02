@@ -6,12 +6,12 @@ function _init()
   STATE="MENU"
   spritesize=8
   LEVEL=0
-  minx=0+(LEVEL*256)
+  minx=0
   miny=0
-  maxx=256+(LEVEL*256)
-  maxy=512 -- todo: grab from individual maps
+  maxx=256
+  maxy=512
   min_cam_y=0
-  max_cam_y=388 -- todo: configure
+  max_cam_y=388
   max_cam_x=maxx/2
   startx=3
   starty=433
@@ -74,8 +74,6 @@ end
 
 function _draw()
   cls()
-  print("WOW", player.x, player.y-10, 7)
-  print("CAMWOW", cam_x+1, cam_y+1, 7)
   if STATE=="MENU" then return menu_draw() end
   if STATE=="GAMEPLAY" then return gameplay_draw() end
 end
@@ -83,8 +81,6 @@ end
 function gameplay_draw()
   local map_x = LEVEL*32
   map(map_x, 0) -- todo: needs parameterization of LEVEL
-  print("PLAYER X: "..tostring(player.x), player.x, player.y-20, 7)
-  print("PLAYER Y: "..tostring(player.y), player.x, player.y-10, 7)
   spr(player.s,player.x,player.y,1,1,player.flp)
   if player.dashing and player.dashframe<8 then
     draw_dash_trail(player.x,player.y,player.dashframe,player.flp)
@@ -307,6 +303,8 @@ function collide_map(obj,dir,flag)
   y1/=8
   x2/=8
   y2/=8
+  x1+=(LEVEL*32)
+  x2+=(LEVEL*32)
   if fget(mget(x1,y1),flag)
   or fget(mget(x1,y2),flag)
   or fget(mget(x2,y1),flag)
