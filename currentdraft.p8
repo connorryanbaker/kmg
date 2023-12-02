@@ -2,13 +2,16 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 function _init()
+  -- possible states: MENU, GAMEPLAY, GAMEOVER
+  STATE="MENU"
   spritesize=8
-  level=0
-  minx=0+(level*256)
+  LEVEL=0
+  minx=0
   miny=0
-  maxx=256+(level*256)
-  maxy=512 -- todo: grab from individual maps
-  max_cam_y=388 -- todo: configure
+  maxx=256
+  maxy=512
+  min_cam_y=0
+  max_cam_y=388
   max_cam_x=maxx/2
   startx=3
   starty=433
@@ -29,12 +32,7 @@ function _init()
     acc=0.25,
     boost=4,
     anim=0,
-    running=false,
-    jumping=false,
-    falling=false,
-    landed=false,
-    dashing=false,
-    candash=true,
+    running=false, jumping=false, falling=false, landed=false, dashing=false, candash=true,
     dying=false,
     is={[0]=19,[1]=51},
     runf=0,
@@ -51,46 +49,55 @@ function _init()
   found_cat=false
   cam_x=player.x-64+player.w/2
   cam_y=player.y-64+player.w/2
-  -- test
-  collide_l=false
-  collide_r=false
-  collide_u=false
-  collide_d=false
 end
 
 function _update()
+  if STATE=="MENU" then return menu_update() end
+  if STATE=="GAMEPLAY" then return gameplay_update() end
+  -- TODO: game over
+end
+
+function gameplay_update()
+  if found_cat then
+    reset_player_location()
+    found_cat=false
+  end
   player_update()
   player_animate()
   camera_update()
 end
 
+function menu_update()
+  if btnp(5) then STATE="GAMEPLAY" end
+  -- todo: character select
+end
+
 function _draw()
   cls()
-  map(0,0)
+  if STATE=="MENU" then return menu_draw() end
+  if STATE=="GAMEPLAY" then return gameplay_draw() end
+end
+
+function gameplay_draw()
+  local map_x = LEVEL*32
+  map(map_x, 0) -- todo: needs parameterization of LEVEL
   spr(player.s,player.x,player.y,1,1,player.flp)
-  -- spr(16, 3, 48, 1, 1)
-  -- test
-  -- rect(x1r,y1r,x2r,y2r,7)
-  -- print("L="..tostring(collide_l), x2r+5, y2r)
-  -- print("R="..tostring(collide_r), x2r+5, y2r-10)
-  -- print("U="..tostring(collide_u), x2r+5, y2r-20)
-  -- print("D="..tostring(collide_d), x2r+5, y2r-30)
-  -- print("player_x: "..tostring(player.x), player.x, player.y-10)
-  -- print("player_y: "..tostring(player.y), player.x, player.y-20)
-  -- print("cam_x: "..tostring(cam_x), player.x, player.y-30)
-  -- print("cam_y: "..tostring(cam_y), player.x, player.y-40)
-  -- test
   if player.dashing and player.dashframe<8 then
     draw_dash_trail(player.x,player.y,player.dashframe,player.flp)
     player.dashframe+=1
   end
   if found_cat then
-    print("tada! time for next level.", 10, 10)
+    print("tada! time for next LEVEL.", 10, 10)
     if catsound==nil then
-      sfx(0)
-      catsound=true
+      sfx(0) catsound=true
     end
   end
+end
+
+function menu_draw()
+  print("MAIN MENU", 10, 10)
+  print("PRESS X TO START!", 10, 20)
+  -- todo: character select
 end
 
 function camera_update()
@@ -100,6 +107,7 @@ function camera_update()
   cam_y=player.y-104+player.w/2
   -- cam_y=mid(miny, player.y-64+player.w/2, maxy)
   if cam_y > maxy then cam_y=max_y end
+  if cam_y < min_cam_y then cam_y=min_cam_y end
   camera(cam_x,cam_y)
 end
 
@@ -201,11 +209,9 @@ function player_update()
       player.dying=true
       return
     end
-    collide_d=true
   elseif player.dy<0 then
     player.jumping=true
     if collide_map(player, "up", 1) then player.dy=0 end
-    collide_d=false
   end
 
   -- check collision left and right
@@ -213,26 +219,21 @@ function player_update()
   if player.dx<0 then
     if collide_map(player, "left", 1) or player.x <= minx then 
       player.dx=0
-    -- test
-    collide_l=true
     end
-    if collide_map(player, "left", 7) then 
+    if collide_map(player, "left", 7) then -- todo: we'll have to redo "found cat" logic once cat is drawn dynamically
       found_cat=true
       player.dx=0
+      LEVEL+=1 -- todo: update game over for last level
     end
-    collide_r=false
   elseif player.dx>0 then
     if collide_map(player, "right", 1) or player.x >= maxx then 
       player.dx=0
-      -- test
-      collide_r=true
     end
-    if collide_map(player, "right", 7) then 
+    if collide_map(player, "right", 7) then -- todo: we'll have to redo "found cat" logic once cat is drawn dynamically
       found_cat=true
       player.dx=0
+      LEVEL+=1 -- todo: update game over for last level
     end
-    -- test
-    collide_l=false
   end
 
   -- check idle
@@ -302,6 +303,8 @@ function collide_map(obj,dir,flag)
   y1/=8
   x2/=8
   y2/=8
+  x1+=(LEVEL*32)
+  x2+=(LEVEL*32)
   if fget(mget(x1,y1),flag)
   or fget(mget(x1,y2),flag)
   or fget(mget(x2,y1),flag)
