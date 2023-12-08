@@ -6,6 +6,8 @@ function _init()
   STATE="MENU"
   spritesize=8
   LEVEL=0
+  FOUND_SNACK=false
+  FOUND_CAT=false
   CAT_NAME={[0]="Horatio",[1]="Joe Buck",[2]="Georgia"}
   minx=0
   miny=0
@@ -15,7 +17,8 @@ function _init()
   max_cam_y=388
   max_cam_x=maxx/2
   startx=3
-  starty=433
+  starty=-3
+  -- test
   gravity=0.25
   friction=0.80
   player={ 
@@ -30,7 +33,7 @@ function _init()
     max_dx=2,
     max_dy=3,
     acc=0.25,
-    boost=4,
+    boost=3.8,
     anim=0,
     running=false,
     jumping=false,
@@ -49,7 +52,6 @@ function _init()
   miny=player.y-5 -- todo: needs thought
   tick=0
   fs=false
-  found_cat=false
   cam_x=player.x-64+player.w/2
   cam_y=player.y-64+player.w/2
 end
@@ -61,12 +63,12 @@ function _update()
 end
 
 function gameplay_update()
-  if found_cat and (time()-found_cat_time) > 3 then
+  if FOUND_CAT and (time()-FOUND_CAT_TIME) > 3 then
     LEVEL+=1
     reset_player_location()
-    found_cat=false
+    FOUND_CAT=false
   end
-  if not found_cat then player_update() end
+  if not FOUND_CAT then player_update() end
   player_animate()
   camera_update()
 end
@@ -98,14 +100,22 @@ end
 
 function gameplay_draw()
   local map_x = LEVEL*32
-  map(map_x, 0) -- todo: needs parameterization of LEVEL
+  map(map_x, 0)
+  if FOUND_SNACK then
+    spr(22,0,96)
+  end
+  if not FOUND_SNACK then
+    -- todo: sprite over cat coordinate per level
+    spr(22,16,48)
+  end
+  -- player
   spr(player.s,player.x,player.y,1,1,player.flp)
   if player.dashing and player.dashframe<8 then
     draw_dash_trail(player.x,player.y,player.dashframe,player.flp)
     player.dashframe+=1
   end
-  if found_cat then
-    local seconds=flr(time()-found_cat_time)+1
+  if FOUND_CAT then
+    local seconds=flr(time()-FOUND_CAT_TIME)+1
     for i=1,seconds do
       local x
       local y = player.y - 10 * i
@@ -246,19 +256,28 @@ function player_update()
     if collide_map(player, "left", 1) or player.x <= minx then 
       player.dx=0
     end
-    if collide_map(player, "left", 7) then -- todo: we'll have to redo "found cat" logic once cat is drawn dynamically
-      found_cat=true
-      found_cat_time=time()
+    if collide_map(player, "left", 7) and FOUND_SNACK then
+      FOUND_CAT=true
+      FOUND_CAT_TIME=time()
       player.dx=0
     end
   elseif player.dx>0 then
     if collide_map(player, "right", 1) or player.x >= maxx then 
       player.dx=0
     end
-    if collide_map(player, "right", 7) then -- todo: we'll have to redo "found cat" logic once cat is drawn dynamically
-      found_cat=true
-      found_cat_time=time()
+    if collide_map(player, "right", 7) and FOUND_SNACK then
+      FOUND_CAT=true
+      FOUND_CAT_TIME=time()
       player.dx=0
+    end
+  end
+
+  -- todo: cleanup this messy fn
+  local d = { "up", "down", "left", "right" }
+  for i=1,4 do
+    if collide_map(player, d[i], 4) then 
+      FOUND_SNACK=true
+      sfx(1)
     end
   end
 
@@ -468,7 +487,7 @@ b2b2b2b2b2b261b2b2537171717171717171717171b2717171b2b2b2b2b2b2b2f0f0f0f0b4f07070
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 717171717171717171717171717171717171717171b2b2b2b2b2b2b2b2b2b2b27070707070707070c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4
 __gff__
-0080800000010203000000000000000080808000000200030303000000000003000080000002060200000000000000038000000000000302000002020300030300000000000000000000000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0080800000010203000000000000000080808000000200030303000000000003000080000002060200000000000000038000000000000302000002020300030310000000000000000000000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
