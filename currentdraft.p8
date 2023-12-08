@@ -17,7 +17,7 @@ function _init()
   max_cam_y=388
   max_cam_x=maxx/2
   startx=3
-  starty=-3
+  starty=433
   gravity=0.25
   friction=0.80
   player={ 
