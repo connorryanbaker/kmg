@@ -18,7 +18,6 @@ function _init()
   max_cam_x=maxx/2
   startx=3
   starty=-3
-  -- test
   gravity=0.25
   friction=0.80
   player={ 
@@ -102,7 +101,7 @@ function gameplay_draw()
   local map_x = LEVEL*32
   map(map_x, 0)
   if FOUND_SNACK then
-    spr(22,0,96)
+    spr(57,0,96)
   end
   if not FOUND_SNACK then
     -- todo: sprite over cat coordinate per level
