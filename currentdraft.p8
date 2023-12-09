@@ -157,8 +157,7 @@ function camera_update()
   if cam_x < 0 then cam_x=0 end 
   if cam_x > max_cam_x then cam_x=max_cam_x end
   cam_y=player.y-104+player.w/2
-  -- cam_y=mid(miny, player.y-64+player.w/2, maxy)
-  if cam_y > maxy then cam_y=max_y end
+  if cam_y > max_cam_y then cam_y=max_cam_y end
   if cam_y < min_cam_y then cam_y=min_cam_y end
   camera(cam_x,cam_y)
 end
