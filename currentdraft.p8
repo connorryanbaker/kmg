@@ -8,15 +8,24 @@ function _init()
   LEVEL=0
   FOUND_SNACK=false
   FOUND_CAT=false
+  LEVEL_TO_SNACK = { [0] = {
+                         snack={ s=57, x=0, y=96 },
+                         cat={ s=22, x=16, y=48 }
+                       },
+                     [1] = {
+                         snack={ s=15, x=240, y=280 },
+                         cat={ s=80, x=200, y=184 }
+                     }
+                   }
   CAT_NAME={[0]="Horatio",[1]="Joe Buck",[2]="Georgia"}
   minx=0
   miny=0
-  maxx=256
+  maxx=248
   maxy=512
   min_cam_y=0
   max_cam_y=388
   max_cam_x=maxx/2
-  MAX_DY=500 -- this is an arbitrary start to avoid getting stuck after long falls
+  MAX_DY=5 
   startx=3
   starty=440
   gravity=0.25
@@ -67,6 +76,7 @@ function gameplay_update()
     LEVEL+=1
     reset_player_location()
     FOUND_CAT=false
+    FOUND_SNACK=false
   end
   if not FOUND_CAT then player_update() end
   player_animate()
@@ -102,12 +112,12 @@ function gameplay_draw()
   local map_x = LEVEL*32
   map(map_x, 0)
   if FOUND_SNACK then
-    -- need map of level -> sprite, x, y
-    spr(57,0,96)
+    local s = LEVEL_TO_SNACK[LEVEL].snack
+    spr(s.s,s.x,s.y)
   end
   if not FOUND_SNACK then
-    -- todo: sprite over cat coordinate per level
-    spr(22,16,48)
+    local c = LEVEL_TO_SNACK[LEVEL].cat
+    spr(c.s,c.x,c.y)
   end
   -- player
   spr(player.s,player.x,player.y,1,1,player.flp)
@@ -118,14 +128,17 @@ function gameplay_draw()
   if FOUND_CAT then
     local seconds=flr(time()-FOUND_CAT_TIME)+1
     for i=1,seconds do
+      -- <3
       local x
       local y = player.y - 10 * i
       if i%2==0 then x = player.x-10 else x = player.x+10 end
       spr(50, x, y)
     end
     local name = CAT_NAME[LEVEL]
-    print("You found "..name.."!", player.x+20, player.y-20, 9)
-    if LEVEL<2 then print("Let's go find "..CAT_NAME[LEVEL+1].."!", player.x+20, player.y-10, 9) end
+    print("You found "..name.."!", cam_x, cam_y+10, 9)
+    if LEVEL<2 then 
+      print("Let's go find "..CAT_NAME[LEVEL+1].."!", cam_x, cam_y+20, 9)
+    end
     if catsound==nil then -- todo: this doesn't belong here and is gross
       sfx(0) catsound=true
     end
@@ -279,7 +292,7 @@ function player_update()
   -- todo: cleanup this messy fn
   local d = { "up", "down", "left", "right" }
   for i=1,4 do
-    if collide_map(player, d[i], 4) then 
+    if collide_map(player, d[i], 4) and not FOUND_SNACK then
       FOUND_SNACK=true
       sfx(1)
     end
@@ -293,7 +306,9 @@ function player_update()
     player.direction=0
   end
 
-  player.x+=player.dx
+  if player.x < maxy then
+    player.x+=player.dx
+  end
   player.y+=player.dy
 
   if player.y>maxy then reset_player_location() end
