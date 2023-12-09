@@ -8,17 +8,26 @@ function _init()
   LEVEL=0
   FOUND_SNACK=false
   FOUND_CAT=false
+  LEVEL_TO_SNACK = { [0] = {
+                         snack={ s=57, x=0, y=96 },
+                         cat={ s=22, x=16, y=48 }
+                       },
+                     [1] = {
+                         snack={ s=15, x=240, y=280 },
+                         cat={ s=80, x=200, y=184 }
+                     }
+                   }
   CAT_NAME={[0]="Horatio",[1]="Joe Buck",[2]="Georgia"}
   minx=0
   miny=0
-  maxx=256
+  maxx=248
   maxy=512
   min_cam_y=0
   max_cam_y=388
   max_cam_x=maxx/2
-  MAX_DY=10 -- this is an arbitrary start to avoid getting stuck after long falls
+  MAX_DY=5 
   startx=3
-  starty=433
+  starty=440
   gravity=0.25
   friction=0.80
   player={ 
@@ -67,6 +76,7 @@ function gameplay_update()
     LEVEL+=1
     reset_player_location()
     FOUND_CAT=false
+    FOUND_SNACK=false
   end
   if not FOUND_CAT then player_update() end
   player_animate()
@@ -102,11 +112,12 @@ function gameplay_draw()
   local map_x = LEVEL*32
   map(map_x, 0)
   if FOUND_SNACK then
-    spr(57,0,96)
+    local s = LEVEL_TO_SNACK[LEVEL].snack
+    spr(s.s,s.x,s.y)
   end
   if not FOUND_SNACK then
-    -- todo: sprite over cat coordinate per level
-    spr(22,16,48)
+    local c = LEVEL_TO_SNACK[LEVEL].cat
+    spr(c.s,c.x,c.y)
   end
   -- player
   spr(player.s,player.x,player.y,1,1,player.flp)
@@ -117,14 +128,17 @@ function gameplay_draw()
   if FOUND_CAT then
     local seconds=flr(time()-FOUND_CAT_TIME)+1
     for i=1,seconds do
+      -- <3
       local x
       local y = player.y - 10 * i
       if i%2==0 then x = player.x-10 else x = player.x+10 end
       spr(50, x, y)
     end
     local name = CAT_NAME[LEVEL]
-    print("You found "..name.."!", player.x+20, player.y-20, 9)
-    if LEVEL<2 then print("Let's go find "..CAT_NAME[LEVEL+1].."!", player.x+20, player.y-10, 9) end
+    print("You found "..name.."!", cam_x, cam_y+10, 9)
+    if LEVEL<2 then 
+      print("Let's go find "..CAT_NAME[LEVEL+1].."!", cam_x, cam_y+20, 9)
+    end
     if catsound==nil then -- todo: this doesn't belong here and is gross
       sfx(0) catsound=true
     end
@@ -143,8 +157,7 @@ function camera_update()
   if cam_x < 0 then cam_x=0 end 
   if cam_x > max_cam_x then cam_x=max_cam_x end
   cam_y=player.y-104+player.w/2
-  -- cam_y=mid(miny, player.y-64+player.w/2, maxy)
-  if cam_y > maxy then cam_y=max_y end
+  if cam_y > max_cam_y then cam_y=max_cam_y end
   if cam_y < min_cam_y then cam_y=min_cam_y end
   camera(cam_x,cam_y)
 end
@@ -193,7 +206,9 @@ end
 
 -- thanks nerdy teachers :D
 function player_update()
-  player.dy+=gravity
+  if player.dy < MAX_DY then
+    player.dy+=gravity
+  end
   player.dx*=friction
 
   if btn(0) then -- left
@@ -276,7 +291,7 @@ function player_update()
   -- todo: cleanup this messy fn
   local d = { "up", "down", "left", "right" }
   for i=1,4 do
-    if collide_map(player, d[i], 4) then 
+    if collide_map(player, d[i], 4) and not FOUND_SNACK then
       FOUND_SNACK=true
       sfx(1)
     end
@@ -290,10 +305,10 @@ function player_update()
     player.direction=0
   end
 
-  player.x+=player.dx
-  if player.dy < MAX_DY then
-    player.y+=player.dy
+  if player.x < maxy then
+    player.x+=player.dx
   end
+  player.y+=player.dy
 
   if player.y>maxy then reset_player_location() end
 end
@@ -488,7 +503,7 @@ b2b2b2b2b2b261b2b2537171717171717171717171b2717171b2e2c2e0c2e2b2f0f0f0f005f07070
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 717171717171717171717171717171717171717171b2b2b2b2b2e2c2e2c2d2b27070707070707070060606060606060606060606060606060606060606060606
 __gff__
-0080800000010203000000000000000080808000000200030303000000000003000080000002060200000000000000038000000000000302000002020300030300000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000
+0080800000010203000000000000000080808000000200030303000000000003000080000002060200000000000000038000000000000302000002020300030310001000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f4c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
