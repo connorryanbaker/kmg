@@ -17,8 +17,8 @@ function _init()
                          cat={ s=80, x=200, y=184 }
                      },
                       [2] = {
-                         snack={ s=15, x=240, y=280 },
-                         cat={ s=80, x=200, y=184 }
+                         snack={ s=82, x=72, y=104},
+                         cat={ s=115, x=104, y=56 }
                      },
                    }
   CAT_NAME={[0]="Horatio",[1]="Joe Buck",[2]="Georgia"}
@@ -30,7 +30,7 @@ function _init()
   max_cam_y=388
   max_cam_x=maxx/2
   MAX_DY=5 
-  startx=3
+  startx=3 
   starty=440
   gravity=0.25
   friction=0.80
@@ -353,8 +353,8 @@ function collide_map(obj,dir,flag)
     x2=x+w
     y2=y+h-1
   elseif dir=="up" then
-    x1=x+1
-    y1=y-1
+    x1=x+3
+    y1=y-3
     x2=x+w-1
     y2=y
   elseif dir=="down" then
