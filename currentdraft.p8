@@ -67,18 +67,27 @@ function _init()
   fs=false
   cam_x=player.x-64+player.w/2
   cam_y=player.y-64+player.w/2
+  MENU_SELECT=0
   music(LEVEL)
 end
 
 function _update()
   if STATE=="MENU" then return menu_update() end
   if STATE=="GAMEPLAY" then return gameplay_update() end
+  if STATE=="GAMEOVER" then return gameover_update() end
   -- TODO: game over
+end
+
+function gameover_update()
 end
 
 function gameplay_update()
   if FOUND_CAT and (time()-FOUND_CAT_TIME) > 3 then
     LEVEL+=1
+    if LEVEL==3 then
+      STATE="GAMEOVER"
+      return
+    end
     reset_player_location()
     FOUND_CAT=false
     FOUND_SNACK=false
@@ -89,29 +98,26 @@ function gameplay_update()
   camera_update()
 end
 
-function menu_update()
-  if btnp(4) then
-    -- gus
-    player.ws={[0]=20,[1]=36,[2]=20,[3]=4}
-    player.is={[0]=20,[1]=52}
-    player.jump_s=100
-    player.dash_s=116
-    player.die_s=99
-    STATE="GAMEPLAY"
-  elseif btnp(5) then
-    player.ws={[0]=19,[1]=35,[2]=19,[3]=3}
-    player.is={[0]=19,[1]=51}
-    player.jump_s=33
-    player.dash_s=32
-    player.die_s=49
-    STATE="GAMEPLAY"
-  end
-end
 
 function _draw()
   cls()
   if STATE=="MENU" then return menu_draw() end
   if STATE=="GAMEPLAY" then return gameplay_draw() end
+  if STATE=="GAMEOVER" then return gameover_draw() end
+end
+
+function gameover_draw()
+  -- sprites 1 3 4 18 34
+  local map_x = LEVEL*32
+  map(map_x, 0)
+  spr(1, 90, 30)
+  spr(3, 100, 40)
+  spr(4, 110, 50)
+  spr(18, 120, 60)
+  spr(34, 130, 70)
+  print("Woohoo!", 80, 80, 7)
+  print("You found all the cats!", 80, 100, 7)
+  print("Merry Xmas!", 80, 110, 7)
 end
 
 function gameplay_draw()
@@ -151,11 +157,43 @@ function gameplay_draw()
   end
 end
 
+function menu_update()
+  if btnp(0) then MENU_SELECT=0 end
+  if btnp(1) then MENU_SELECT=1 end
+
+  if btnp(5) then
+    if MENU_SELECT == 1 then
+      player.ws={[0]=20,[1]=36,[2]=20,[3]=4}
+      player.is={[0]=20,[1]=52}
+      player.jump_s=100
+      player.dash_s=116
+      player.die_s=99
+      STATE="GAMEPLAY"
+    else
+      player.ws={[0]=19,[1]=35,[2]=19,[3]=3}
+      player.is={[0]=19,[1]=51}
+      player.jump_s=33
+      player.dash_s=32
+      player.die_s=49
+      STATE="GAMEPLAY"
+    end
+  end
+end
+
 function menu_draw()
-  print("MAIN MENU", 10, 10)
-  print("PRESS X TO START AS MOLLIE!", 10, 20)
-  print("PRESS Z TO START AS GUS!", 10, 40)
-  -- todo: character select
+  print("The kitties got out!", 30, 30, 10)
+  print("Let's go get em!", 30, 40, 10)
+  if MENU_SELECT==0 then
+    spr(3, 40, 60)
+    spr(20, 80, 60)
+    rect(35, 50, 53, 78, 10)
+    print("Mol!", 37, 70, 9)
+  else
+    spr(4, 80, 60)
+    spr(19, 40, 60)
+    rect(75, 50, 93, 78, 10)
+    print("Gus!", 77, 70, 9)
+  end
 end
 
 function camera_update()
@@ -354,7 +392,7 @@ function collide_map(obj,dir,flag)
   elseif dir=="up" then
     x1=x+3
     y1=y-3
-    x2=x+w-1
+    x2=x+w-3
     y2=y
   elseif dir=="down" then
     x1=x+3
