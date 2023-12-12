@@ -21,7 +21,7 @@ function _init()
                          cat={ s=115, x=104, y=56 }
                      },
                    }
-  CAT_NAME={[0]="Horatio",[1]="Joe Buck",[2]="Georgia"}
+  CAT_NAME={[0]="Horatio",[1]="Crazy Joe Buck",[2]="Georgia"}
   minx=0
   miny=0
   maxx=248
@@ -213,7 +213,7 @@ function draw_dash_trail(x,y,frame,flp)
   if player.jump_s == 100 then
     for i=1,frame-2 do
       for j=i,6 do
-        circfill(startx, y+flr(rnd(i,j))+4, flr(rnd(i+j))/3, flr(rnd(i,j))+12)
+        circfill(startx, y+flr(rnd(i,j))+4, flr(rnd(i+j))/3, flr(rnd(i,j))+10)
         if flp then startx+=1 else startx-=1 end
       end
     end
