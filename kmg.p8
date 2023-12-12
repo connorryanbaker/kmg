@@ -194,6 +194,8 @@ function menu_draw()
     rect(75, 50, 93, 78, 10)
     print("Gus!", 77, 70, 9)
   end
+  print("Press X to jump!", 30, 85, 10)
+  print("Press Y for a boost!", 30, 95, 10)
 end
 
 function camera_update()
