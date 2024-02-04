@@ -5,9 +5,11 @@ You can try it out on [itch.io](https://chunkilu.itch.io/kmg)!
 My wife (Ashley) and I developed the game as a Christmas gift for my sister and brother
 in law (Mollie and Gus). Ashley created the sprites and maps and I contributed the code, music
 and sfx. The gist of the game is that my sister's house cats have escaped and need
-finding, but will only show themselves if lured out with snacks.
+finding, but will only show themselves if lured out with snacks. ffmpeg has
+distorted the color palette in the below screengrab a bit, but you get the idea
+:)
 
-![KMG screenshot](./kmg-screenshot.png)
+![KMG screengrab](./KMG.gif)
 
 I've always been inspired by Hackernews posts about the value of finishing
 a game - though the concept of a "finished" game is subjective, picking a small
