@@ -21,7 +21,7 @@ boost to try and tackle a more complex game and Christmas provided a natural
 deadline. While this codebase admittedly showcases a number of programming
 antipatterns I normally pride myself on avoiding (magic numbers! duplication! super-long
 functions! no tests! one file?!), this was by far the most rewarding personal project I've ever
-worked on. Collaborating with Ashley was a delight, the quality of her sprites and maps surpassed my wildest expectaions and we had a ton of fun bringing the concepts to life.
+worked on. Collaborating with Ashley was a delight, the quality of her sprites and maps surpassed my wildest expectations and we had a ton of fun bringing the concepts to life.
 As an extra Christmas touch, we bought a Powkiddy RGB-30 (cool!) and installed the
 game on an SD card so that the game could be played on a physical console.
 While I would point to other personal projects for examples of perhaps more
